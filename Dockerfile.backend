@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+COPY Backend/TXConstructionManagement.sln .
+COPY Backend/src/TXConstructionManagement/TXConstructionManagement.csproj src/TXConstructionManagement/
+COPY Backend/tests/TXConstructionManagement.Tests/TXConstructionManagement.Tests.csproj tests/TXConstructionManagement.Tests/
+RUN dotnet restore src/TXConstructionManagement/TXConstructionManagement.csproj
+
+COPY Backend/src/ ./src/
+WORKDIR /app/src/TXConstructionManagement
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "TXConstructionManagement.dll"]
